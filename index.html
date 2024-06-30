@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Khodam</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            border: 2px solid red;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #1a1a1a;
+            width: 400px;
+            box-shadow: 0 0 10px red;
+        }
+        h1 {
+            color: red;
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-family: 'Creepster', cursive;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-family: 'Creepster', cursive;
+        }
+        input {
+            padding: 10px;
+            width: calc(100% - 24px);
+            border: 2px solid red;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            background-color: #333;
+            color: white;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: red;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Creepster', cursive;
+        }
+        button:hover {
+            background-color: darkred;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+            font-family: 'Creepster', cursive;
+            text-shadow: 2px 2px 5px red, -2px 2px 5px red, 2px -2px 5px red, -2px -2px 5px red;
+        }
+        #bar {
+            position: fixed;
+            width: 100%;
+            bottom: 0px;
+            font-family: Tahoma;
+            height: 5px;
+            color: white;
+            font-size: 10px;
+            left: 0px;
+            border-top: 2px solid green;
+            padding: 15px;
+            background-color: #000;
+            text-align: center;
+        }
+        /*-------------------------added CSS------------------------*/
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .welcome-container {
+            text-align: center;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .welcome-text {
+            font-size: 36px;
+            display: block;
+            white-space: pre-wrap;
+        }
+
+        .continue-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            animation: slide-in 1s forwards;
+        }
+        
+        /* Add this to your existing CSS */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .loading-spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid red;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CEK KHODAM</h1>
+        <p>MASUKKAN NAMA ANDA:</p>
+        <input type="text" id="nameInput">
+        <br>
+        <button onclick="cekKhodam()">Cek sekarang</button>
+        <div class="result" id="result"></div>
+        <div id="bar">
+            <b><font color="blue">Created By Basuki</font> <font color="red">@BasukiStore</font></b>
+        </div>
+    </div>
+    
+    <div class="overlay" id="welcome-overlay">
+        <div class="welcome-container">
+            <div class="welcome-text" id="welcome-text"></div>
+            <button class="continue-button" id="continue-button">Lanjutkan</button>
+        </div>
+    </div>
+    
+    <!-- Add this within the body tag -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <audio id="background-audio" src="https://k.top4top.io/m_3095o4iot0.mp3" preload="auto" loop></audio>
+    
+    <script>
+        const overlay = document.getElementById('welcome-overlay');
+        const welcomeText = document.getElementById('welcome-text');
+        const continueButton = document.getElementById('continue-button');
+        const audio = document.getElementById('background-audio');
+
+        const texts = ["Selamat Datang\n", "Di\n", "Web Chekkhodam"];
+        let index = 0;
+
+        function typeText(element, text, callback) {
+            let i = 0;
+            const speed = 100;
+
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    callback();
+                }
+            }
+
+            type();
+        }
+
+        function displayNextText() {
+            if (index < texts.length) {
+                typeText(welcomeText, texts[index], displayNextText);
+                index++;
+            } else {
+                continueButton.style.display = "inline-block";
+            }
+        }
+
+        displayNextText();
+
+        continueButton.addEventListener("click", function () {
+            overlay.style.opacity = "0";
+            overlay.style.visibility = "hidden";
+            audio.load();
+            audio.play().catch(error => {
+                console.error("Audio playback failed:", error);
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            audio.load();
+        });
+
+        function loadData() {
+            const data = localStorage.getItem('khodamData');
+            return data ? JSON.parse(data) : {};
+        }
+
+        function saveData(data) {
+            localStorage.setItem('khodamData', JSON.stringify(data));
+        }
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        function showLoading() {
+            loadingOverlay.classList.add('show');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('show');
+        }
+
+        function cekKhodam() {
+            showLoading();
+
+            setTimeout(() => {
+                const name = document.getElementById('nameInput').value.trim().toLowerCase();
+
+                if (name.length <= 2) {
+                    document.getElementById('result').innerText = "Nama tidak valid. Harap masukkan nama yang benar jangan setenga².";
+                    hideLoading();
+                    return;
+                }
+
+                const forbiddenWords = ["kamu", "apa", "dia", "ini", "itu", "saya", "orang", "halo"];
+
+                if (forbiddenWords.some(word => name.toLowerCase().includes(word))) {
+                    document.getElementById('result').innerText = "Nama tidak valid. Harap masukkan nama yang benar.";
+                    hideLoading();
+                    return;
+                }
+
+                const toxic = [
+                'anj', 'babi', 'kontol', 'anying', 'asu', 'tempek', 'puki', 'memek', 'pekok', 'komtol', 
+                'anjing', 'pukimak', 'titid', 'silet', 'pantat', 'yatim piatu', 'pantek', 'tunjang', 'jancok', 
+                'kontolodon', 'ngentod', 'ngen', 'kon', 'titit', 'jembot', 'bgst', 'yatim', 'nenen', 'ngewe', 
+                'n3n3n', 'ng3w3', 'ewe', '3w3', 'k0nt0l', 'tuli', 'miskin', 'buta map', 'buta', 'but4', 'but4 m4p', 
+                'but4 map', 'dong0', 'd0ngo', 'd0ng0', 'p3nis', 'penis', 'p3n1s', 'pen1s', 'p3ler', 'p3l3r', 'k0n', 
+                'k0ntol', 'k0nt0l', 'dontol', 'd0ntol', 'd0nt0l', 'monyet', 'm0nyet', 'm0ny3t', 'celeng', 'c3leng', 
+                'c3l3ng', 'cel3ng', 'ketek', 'k3tek', 'k3t3k', 'ket3k', 'ng3ntod', 'ngent0d', 'ng3nt0d', 'ng3n', 'jnck', 
+                'kntl', 'mmk', 'j4ncok', 'janc0k', 'j4nc0k', 'p3ler', 'p3l3r', 'pel3r', 'vaginal', 'v4ginal', 'v4g1nal', 
+                'v4g1n4l', 'vag1n4l', 'vag1nal', 'vagin4l', 'kencing', 'k3ncing', 'tai', 't4i', 'ta!', 't4!', 'ta1', 't41', 
+                'ppek', 'pepek', 'p3p3k', 't3mp3k', 'mani', 'm4ni', 'man1', 'm4n1', 'air mani', 'bapak lu', 'mamak lu', 
+                'tak pelatok ndase', 'ndase', 'lu sok asik', 'platok ndase', 'jemb0t', 'p3k0k', 'pek0k', 'bangsat', 
+                'b4ngs4t', 'b4ngsat', 'bangs4t', 'buta map', 'tolol', 'bajingan', 'b4j1ng4n', 'brengsek', 'br3ngs3k', 
+                'lolot', 'l0l0t', 'fuck', 'fack you', 'fack', 'b4bi', 'b4b!', 'bab1', 'b4b1', 'lu memang anak haram', 
+                'lu memang anak haram lo', 'kaninia jibay', 'kaninia', 'jibay', 'kampret', 'k4mpr3t', 'tytyd', 't1t1d', 
+                'anak bangsat', 'anj lu', 'kanjut'
+            ];
+
+                const toxicWords = toxic.filter(word => new RegExp(`\\b${word}\\b`).test(name));
+
+                if (toxicWords.length > 0) {
+                    document.getElementById('result').innerText = "Nama tidak valid. Harap masukkan nama yang benar ga boleh toxic ga baik.";
+                    hideLoading();
+                    return;
+                }
+
+                const data = loadData();
+
+                if (data[name]) {
+                    document.getElementById('result').innerText = data[name];
+                    speakResult(data[name]); // Speak the existing data
+                    hideLoading();
+                } else {
+                    const khodams = [
+                    'Macan Putih', 'Naga Biru', 'Garuda Emas', 'Harimau Hitam', 'Kuda Perkasa', 'Elang Merah', 
+                    'Singa Emas', 'Serigala Putih', 'Rusa Hijau', 'Gajah Besi', 'Buaya Perunggu', 'Kera Sakti', 
+                    'Burung Hantu', 'Ular Sanca', 'Rajawali Emas', 'Rubah Api', 'Ikan Mas', 'Kijang Perak', 
+                    'Kura-kura Hijau', 'Kakatua Putih', 'Lebah Emas', 'Anjing Hitam', 'Kucing Merah', 'Tikus Besi', 
+                    'Iguana Biru', 'Jangkrik Emas', 'Katak Merah', 'Gurita Ungu', 'Singa Putih', 'Kuda Laut Biru', 
+                    'Hiu Putih', 'Kuda Nil Perak', 'Kerbau Hitam', 'Jerapah Emas', 'Kumbang Merah', 'Kupu-kupu Biru', 
+                    'Kelelawar Hitam', 'Singa Laut', 'Ikan Paus Biru', 'Banteng Merah', 'Kambing Putih', 'Burung Merak', 
+                    'Merpati Emas', 'Bebek Hitam', 'Burung Hantu Merah', 'Ayam Jago', 'Burung Elang', 'Laba-laba Merah', 
+                    'Kalajengking Hitam', 'Ikan Pari Biru', 'Burung Hantu Putih', 'Serigala Hitam', 'Singa Merah', 
+                    'Gajah Merah', 'Rusa Perak', 'Ular Kobra', 'Macan Tutul', 'Kuda Biru', 'Rajawali Putih', 
+                    'Kijang Emas', 'Burung Hantu Biru', 'Rubah Perak', 'Kura-kura Merah', 'Kakatua Merah', 
+                    'Ikan Koi', 'Lebah Merah', 'Anjing Putih', 'Kucing Hitam', 'Tikus Merah', 'Iguana Hijau', 
+                    'Jangkrik Biru', 'Katak Emas', 'Gurita Hitam', 'Singa Biru', 'Kuda Laut Putih', 'Hiu Hitam', 
+                    'Kuda Nil Merah', 'Kerbau Emas', 'Jerapah Perak', 'Kumbang Hitam', 'Kupu-kupu Merah', 
+                    'Kelelawar Merah', 'Singa Laut Hitam', 'Ikan Paus Putih', 'Banteng Hitam', 'Kambing Merah', 
+                    'Burung Merak Emas', 'Merpati Putih', 'Bebek Merah', 'Burung Hantu Hijau', 'Ayam Jantan', 
+                    'Burung Elang Merah', 'Laba-laba Biru', 'Kalajengking Merah', 'Ikan Pari Hitam', 'Burung Hantu Emas', 'kadal buntung', 'biawak terbang', 'biawak mencret', 'burung paruh biru', 'bidadari surgawi', 'zeus'
+                ];
+
+                    const randomIndex = Math.floor(Math.random() * khodams.length);
+                    const randomKhodam = khodams[randomIndex];
+                    const resultMessages = [
+                        `Ya, ${name}, di dalam dirimu ada khodam ${khodams[Math.floor(Math.random() * khodams.length)]}.`,
+                        `${name}, tidak ada khodam di dalam dirimu.`,
+                        `Khodam ${khodams[Math.floor(Math.random() * khodams.length)]} sedang bersemayam di dalam dirimu, ${name}.`,
+                        `Kamu bersih dari khodam, ${name}.`,
+                        `${name}, kamu memiliki khodam yang kuat yaitu ${khodams[Math.floor(Math.random() * khodams.length)]}.`,
+                        `Khodam kamu ${name} tidak ada.`,
+                        `${name}, Khodam kamu ${khodams[Math.floor(Math.random() * khodams.length)]}.`,
+                        `${name}, kamu tidak ada khodam tapi kamu memiliki Allah yg senantiasa menjagamu.`
+                    ];
+                    const resultMessage = resultMessages[Math.floor(Math.random() * resultMessages.length)];
+                    document.getElementById('result').innerText = resultMessage;
+                    speakResult(resultMessage); // Speak the newly generated message
+                    data[name] = resultMessage;
+                    saveData(data);
+                    hideLoading();
+                }
+            }, 1000);
+        }
+
+        function speakResult(text) {
+            let speech = new SpeechSynthesisUtterance();
+            speech.lang = "id";
+            speech.text = text;
+            speech.rate = 1.1; // Rate of speech (1.1x speed)
+            speech.pitch = 1.2; // Pitch of speech (1.2x higher pitch)
+
+            speechSynthesis.speak(speech);
+        }
+    </script>
+</body>
+</html>
